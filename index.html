@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="BCA 2023–2026 Batch Memories — A visual journey through our college years, friendships, and unforgettable moments." />
+  <title>BCA Memories 2023–2026 | Our Journey Together</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- CURSOR -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-follower" id="cursorFollower"></div>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader">
+    <div class="loader-inner">
+      <div class="loader-logo">BCA</div>
+      <div class="loader-year">2023 — 2026</div>
+      <div class="loader-bar-wrap">
+        <div class="loader-bar" id="loaderBar"></div>
+      </div>
+      <div class="loader-text" id="loaderText">Loading Memories...</div>
+    </div>
+  </div>
+
+  <!-- NOISE OVERLAY -->
+  <div class="noise"></div>
+
+  <!-- NAVIGATION -->
+  <nav class="nav" id="nav">
+    <div class="nav-logo">
+      <span class="nav-logo-text">BCA<span class="nav-logo-accent"> Memories</span></span>
+    </div>
+    <div class="nav-links">
+      <a href="#intro" class="nav-link" data-section="intro">Home</a>
+      <a href="#gallery" class="nav-link" data-section="gallery">Gallery</a>
+      <a href="#videos" class="nav-link" data-section="videos">Videos</a>
+      <a href="#mosaic" class="nav-link" data-section="mosaic">Moments</a>
+    </div>
+    <div class="nav-batch">2023–2026</div>
+  </nav>
+
+  <!-- ===================== HERO / INTRO SECTION ===================== -->
+  <section class="hero" id="intro">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+
+    <div class="hero-content">
+      <div class="hero-tag">Bachelor of Computer Applications</div>
+      <h1 class="hero-title">
+        <span class="hero-title-line" data-text="Our">Our</span>
+        <span class="hero-title-line hero-title-gradient" data-text="Memories">Memories</span>
+        <span class="hero-title-line" data-text="Forever">Forever</span>
+      </h1>
+      <p class="hero-subtitle">Three years. One Batch. A lifetime of memories.<br/>2023 — 2026 · BCA Highlights</p>
+      <div class="hero-cta-group">
+        <a href="#gallery" class="btn btn-primary">
+          <span>Explore Gallery</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#videos" class="btn btn-ghost">Watch Moments</a>
+      </div>
+    </div>
+
+    <!-- Floating preview cards -->
+    <div class="hero-preview-cards">
+      <div class="preview-card preview-card-1">
+        <img src="public/photo_2026-06-01_10-16-31.jpg" alt="Memory" loading="lazy" />
+        <div class="preview-card-overlay">
+          <span>Batch Day</span>
+        </div>
+      </div>
+      <div class="preview-card preview-card-2">
+        <img src="public/photo_2026-06-01_10-17-08.jpg" alt="Memory" loading="lazy" />
+        <div class="preview-card-overlay">
+          <span>Moments</span>
+        </div>
+      </div>
+      <div class="preview-card preview-card-3">
+        <img src="public/photo_2026-06-01_10-17-07.jpg" alt="Memory" loading="lazy" />
+        <div class="preview-card-overlay">
+          <span>Together</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="scroll-indicator">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- ===================== MARQUEE STRIP ===================== -->
+  <div class="marquee-section">
+    <div class="marquee-track">
+      <span>BCA Batch 2023–2026</span><span class="marquee-dot">✦</span>
+      <span>Memories Forever</span><span class="marquee-dot">✦</span>
+      <span>Friendship</span><span class="marquee-dot">✦</span>
+      <span>Laughter</span><span class="marquee-dot">✦</span>
+      <span>Late Night Studies</span><span class="marquee-dot">✦</span>
+      <span>College Days</span><span class="marquee-dot">✦</span>
+      <span>Batchmates</span><span class="marquee-dot">✦</span>
+      <span>BCA Batch 2023–2026</span><span class="marquee-dot">✦</span>
+      <span>Memories Forever</span><span class="marquee-dot">✦</span>
+      <span>Friendship</span><span class="marquee-dot">✦</span>
+      <span>Laughter</span><span class="marquee-dot">✦</span>
+      <span>Late Night Studies</span><span class="marquee-dot">✦</span>
+      <span>College Days</span><span class="marquee-dot">✦</span>
+      <span>Batchmates</span><span class="marquee-dot">✦</span>
+    </div>
+  </div>
+
+  <!-- ===================== FEATURED PHOTO SHOWCASE ===================== -->
+  <section class="showcase" id="showcase">
+    <div class="section-header">
+      <div class="section-tag">Featured Highlights</div>
+      <h2 class="section-title">Best <em>Moments</em></h2>
+      <p class="section-sub">Handpicked memories from our incredible journey together</p>
+    </div>
+    <div class="showcase-grid">
+      <div class="showcase-item showcase-item--large" data-tilt>
+        <div class="showcase-img-wrap">
+          <img src="public/photo_2026-06-01_10-17-08.jpg" alt="Featured Memory" loading="lazy" />
+        </div>
+        <div class="showcase-info">
+          <span class="showcase-year">2026</span>
+          <h3>Final Year Highlights</h3>
+        </div>
+      </div>
+      <div class="showcase-item" data-tilt>
+        <div class="showcase-img-wrap">
+          <img src="public/photo_2026-06-01_10-16-46 (2).jpg" alt="Memory" loading="lazy" />
+        </div>
+        <div class="showcase-info">
+          <span class="showcase-year">2025</span>
+          <h3>Mid-Year Fun</h3>
+        </div>
+      </div>
+      <div class="showcase-item" data-tilt>
+        <div class="showcase-img-wrap">
+          <img src="public/photo_2026-06-01_10-17-07.jpg" alt="Memory" loading="lazy" />
+        </div>
+        <div class="showcase-info">
+          <span class="showcase-year">2024</span>
+          <h3>Growing Together</h3>
+        </div>
+      </div>
+      <div class="showcase-item showcase-item--wide" data-tilt>
+        <div class="showcase-img-wrap">
+          <img src="public/photo_2026-06-01_10-17-05.jpg" alt="Memory" loading="lazy" />
+        </div>
+        <div class="showcase-info">
+          <span class="showcase-year">2023</span>
+          <h3>Where It All Began</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 3D GALLERY SECTION ===================== -->
+  <section class="gallery" id="gallery">
+    <div class="section-header">
+      <div class="section-tag">Photo Gallery</div>
+      <h2 class="section-title">Every <em>Memory</em> Counts</h2>
+      <p class="section-sub">All 54 snapshots from our BCA journey — hover to feel the moment</p>
+    </div>
+
+    <!-- Gallery Filter -->
+    <div class="gallery-filter" id="galleryFilter">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="group">Group</button>
+      <button class="filter-btn" data-filter="fun">Fun</button>
+      <button class="filter-btn" data-filter="campus">Campus</button>
+    </div>
+
+    <div class="gallery-masonry" id="galleryMasonry">
+      <!-- Images injected by JS -->
+    </div>
+  </section>
+
+  <!-- ===================== VIDEO SHOWCASE SECTION ===================== -->
+  <section class="videos-section" id="videos">
+    <div class="section-header">
+      <div class="section-tag">Video Memories</div>
+      <h2 class="section-title">Relive the <em>Moments</em></h2>
+      <p class="section-sub">8 videos capturing the energy, laughter, and love of our batch</p>
+    </div>
+
+    <div class="videos-grid" id="videosGrid">
+      <!-- Videos injected by JS -->
+    </div>
+  </section>
+
+  <!-- ===================== HORIZONTAL SCROLL MOSAIC ===================== -->
+  <section class="mosaic-section" id="mosaic">
+    <div class="section-header">
+      <div class="section-tag">Memory Lane</div>
+      <h2 class="section-title">Scroll Through <em>Time</em></h2>
+      <p class="section-sub">A horizontal journey through our three years</p>
+    </div>
+    <div class="mosaic-track-wrap" id="mosaicWrap">
+      <div class="mosaic-track" id="mosaicTrack">
+        <!-- Mosaic items injected by JS -->
+      </div>
+    </div>
+    <div class="mosaic-progress">
+      <div class="mosaic-progress-bar" id="mosaicProgress"></div>
+    </div>
+  </section>
+
+  <!-- ===================== 3D CAROUSEL SECTION ===================== -->
+  <section class="carousel-section" id="carousel-sec">
+    <div class="section-header">
+      <div class="section-tag">3D Showcase</div>
+      <h2 class="section-title">The <em>Circle</em> of Memories</h2>
+    </div>
+    <div class="carousel-stage">
+      <div class="carousel-3d" id="carousel3d">
+        <!-- Cards injected by JS -->
+      </div>
+    </div>
+    <div class="carousel-controls">
+      <button class="carousel-btn" id="carouselPrev">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <button class="carousel-btn" id="carouselNext">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== LIGHTBOX ===================== -->
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-overlay" id="lightboxOverlay"></div>
+    <div class="lightbox-content">
+      <button class="lightbox-close" id="lightboxClose">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <button class="lightbox-nav lightbox-prev" id="lightboxPrev">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="lightbox-img-wrap">
+        <img src="" alt="" id="lightboxImg" />
+      </div>
+      <button class="lightbox-nav lightbox-next" id="lightboxNext">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <div class="lightbox-counter" id="lightboxCounter">1 / 54</div>
+    </div>
+  </div>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="footer">
+    <div class="footer-orb"></div>
+    <div class="footer-content">
+      <div class="footer-logo">BCA <span>Memories</span></div>
+      <p class="footer-tagline">Three years of friendship, learning, and laughter.<br/>2023 — 2026 · Always in our hearts.</p>
+      <div class="footer-year-badges">
+        <span class="year-badge">2023</span>
+        <span class="year-sep">→</span>
+        <span class="year-badge">2024</span>
+        <span class="year-sep">→</span>
+        <span class="year-badge">2025</span>
+        <span class="year-sep">→</span>
+        <span class="year-badge active">2026</span>
+      </div>
+      <p class="footer-copy">Made with ❤️ for our BCA Batch · All rights reserved 2026</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
