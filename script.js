@@ -182,6 +182,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const navLinks = document.querySelectorAll('.nav-link');
   const sections = document.querySelectorAll('section');
 
+  // ---- Hamburger Mobile Menu ----
+  const hamburger = document.getElementById('navHamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+  const closeMobileMenu = () => {
+    hamburger.classList.remove('open');
+    mobileMenu.classList.remove('open');
+    document.body.style.overflow = 'visible';
+  };
+
+  hamburger.addEventListener('click', () => {
+    const isOpen = hamburger.classList.toggle('open');
+    mobileMenu.classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : 'visible';
+  });
+
+  mobileNavLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      closeMobileMenu();
+    });
+  });
+
   let ticking = false;
   const updateNav = () => {
     const scrollPos = window.scrollY;
@@ -282,9 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // INJECT VIDEO MEMORIES GRID
+  // INJECT VIDEO MEMORIES GRID (LAZY LOADED)
   // ==========================================
   const videosGrid = document.getElementById('videosGrid');
+  const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry/i.test(navigator.userAgent);
 
   const generateVideos = () => {
     videosGrid.innerHTML = '';
@@ -293,18 +317,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'video-card';
       
+      // On mobile: no autoplay on hover — use poster thumbnail + click to fullscreen
+      // On desktop: hover to play (but load src lazily via IntersectionObserver)
       card.innerHTML = `
         <div class="video-container">
-          <video src="${video.src}" loop playsinline muted preload="metadata"></video>
+          <video loop playsinline muted preload="none" data-src="${video.src}"></video>
           <div class="video-overlay">
             <span class="video-badge">${getClickDate(video.src)}</span>
-            <button class="video-btn">
-              <svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <button class="video-btn" aria-label="Play video">
+              <svg width="22" height="22" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             </button>
             <div class="video-meta">
               <span class="video-card-title">${video.title}</span>
               <button class="video-mute-btn" title="Mute/Unmute">
-                <svg class="mute-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="mute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
                 </svg>
               </button>
@@ -317,50 +343,62 @@ document.addEventListener('DOMContentLoaded', () => {
       const overlay = card.querySelector('.video-overlay');
       const playBtn = card.querySelector('.video-btn');
       const muteBtn = card.querySelector('.video-mute-btn');
+      let srcLoaded = false;
+
+      // Load video src only when card enters viewport
+      const videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !srcLoaded) {
+            srcLoaded = true;
+            vElement.src = vElement.dataset.src;
+            vElement.load();
+            videoObserver.unobserve(card);
+          }
+        });
+      }, { rootMargin: '200px', threshold: 0 });
+
+      videoObserver.observe(card);
       
-      // Hover to play muted
-      card.addEventListener('mouseenter', () => {
-        vElement.play().catch(err => console.log('Autoplay prevented:', err));
-        playBtn.style.opacity = '0';
-        playBtn.style.transform = 'scale(0.8) translateY(-50%)';
-      });
-      
-      card.addEventListener('mouseleave', () => {
-        vElement.pause();
-        playBtn.style.opacity = '1';
-        playBtn.style.transform = 'scale(1) translateY(0)';
-      });
+      if (!isMobile) {
+        // Desktop: hover to play muted preview
+        card.addEventListener('mouseenter', () => {
+          if (srcLoaded) {
+            vElement.play().catch(err => console.log('Autoplay prevented:', err));
+          }
+          playBtn.style.opacity = '0';
+          playBtn.style.transform = 'scale(0.8)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          vElement.pause();
+          playBtn.style.opacity = '1';
+          playBtn.style.transform = 'scale(1)';
+        });
+      }
 
       // Mute toggle
       muteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         vElement.muted = !vElement.muted;
-        if (vElement.muted) {
-          muteBtn.innerHTML = `
-            <svg class="mute-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
-            </svg>
-          `;
-        } else {
-          muteBtn.innerHTML = `
-            <svg class="mute-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-            </svg>
-          `;
-        }
+        muteBtn.innerHTML = vElement.muted
+          ? `<svg class="mute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>`
+          : `<svg class="mute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
       });
 
-      // Click video overlay to open video or make it fullscreen
+      // Click overlay to fullscreen
       overlay.addEventListener('click', (e) => {
         if (e.target.closest('.video-mute-btn')) return;
+        if (!srcLoaded) {
+          srcLoaded = true;
+          vElement.src = vElement.dataset.src;
+          vElement.load();
+        }
+        vElement.muted = false;
+        vElement.play();
         if (vElement.requestFullscreen) {
           vElement.requestFullscreen();
-          vElement.muted = false;
-          vElement.play();
         } else if (vElement.webkitRequestFullscreen) {
           vElement.webkitRequestFullscreen();
-          vElement.muted = false;
-          vElement.play();
         }
       });
       
@@ -462,6 +500,20 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   mosaicWrap.addEventListener('scroll', updateMosaicProgress);
+
+  // Touch swipe support for mobile
+  let touchStartX = 0;
+  let touchScrollStart = 0;
+  mosaicWrap.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchScrollStart = mosaicWrap.scrollLeft;
+  }, { passive: true });
+
+  mosaicWrap.addEventListener('touchmove', (e) => {
+    const dx = touchStartX - e.touches[0].clientX;
+    mosaicWrap.scrollLeft = touchScrollStart + dx;
+    updateMosaicProgress();
+  }, { passive: true });
 
   // ==========================================
   // 3D CAROUSEL
