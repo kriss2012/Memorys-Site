@@ -79,6 +79,8 @@ img, video {
   display: block;
   object-fit: cover;
   pointer-events: none;
+  /* Respect EXIF rotation from phone cameras */
+  image-orientation: from-image;
 }
 
 /* ==========================================
@@ -1518,7 +1520,7 @@ img, video {
   background: var(--bg-card);
   transition: border-color 0.4s, box-shadow 0.4s;
   cursor: pointer;
-  -webkit-box-reflect: below 15px linear-gradient(transparent, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.2));
+  /* Removed -webkit-box-reflect: causes 3D rendering glitch on Android */
 }
 
 .carousel-card img {
@@ -1526,6 +1528,7 @@ img, video {
   height: 100%;
   object-fit: cover;
   pointer-events: none;
+  image-orientation: from-image;
 }
 
 .carousel-card-info {
