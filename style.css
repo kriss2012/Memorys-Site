@@ -494,6 +494,70 @@ img, video {
 }
 
 /* ==========================================
+   EXTRA SMALL SCREENS (PHONE PORTRAIT)
+   ========================================== */
+@media (max-width: 480px) {
+  .hero {
+    padding: 0 5%;
+    padding-top: 80px;
+  }
+  .hero-title {
+    font-size: 2.8rem;
+  }
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  .hero-tag {
+    font-size: 0.75rem;
+    letter-spacing: 0.15rem;
+  }
+  .hero-cta-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .btn {
+    justify-content: center;
+  }
+  .section-title {
+    font-size: 2.2rem;
+  }
+  .showcase {
+    padding: 5rem 5%;
+  }
+  .gallery {
+    padding: 5rem 5%;
+  }
+  .gallery-masonry {
+    columns: 2 140px;
+    column-gap: 0.8rem;
+  }
+  .gallery-card {
+    margin-bottom: 0.8rem;
+    border-radius: 10px;
+  }
+  .footer {
+    padding: 6rem 5% 3rem;
+  }
+  .footer-year-badges {
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+  .mobile-nav-link {
+    font-size: 1.6rem;
+  }
+  .carousel-section {
+    padding: 5rem 0;
+  }
+  .carousel-stage {
+    height: 350px;
+  }
+  .carousel-3d {
+    width: 220px;
+    height: 300px;
+  }
+}
+
+/* ==========================================
    BUTTONS
    ========================================== */
 .btn {
