@@ -71,6 +71,24 @@ document.addEventListener('DOMContentLoaded', () => {
     { src: 'public/video_2026-06-01_10-16-59.mp4', title: 'BCA Journey Reel', year: '2026' }
   ];
 
+  // Helper to extract click date/time from filename
+  const getClickDate = (src) => {
+    const match = src.match(/(?:photo|video)_(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})-(\d{2})/);
+    if (match) {
+      const [_, dateStr, hh, mm, ss] = match;
+      const date = new Date(`${dateStr}T${hh}:${mm}:${ss}`);
+      return date.toLocaleString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+    return '';
+  };
+
   // ==========================================
   // CUSTOM CURSOR LERP ANIMATION
   // ==========================================
@@ -91,13 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const animateCursor = () => {
     cursorX = lerp(cursorX, mouseX, 0.2);
     cursorY = lerp(cursorY, mouseY, 0.2);
-    cursor.style.left = `${cursorX}px`;
-    cursor.style.top = `${cursorY}px`;
+    cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%)`;
 
     followerX = lerp(followerX, mouseX, 0.1);
     followerY = lerp(followerY, mouseY, 0.1);
-    follower.style.left = `${followerX}px`;
-    follower.style.top = `${followerY}px`;
+    follower.style.transform = `translate3d(${followerX}px, ${followerY}px, 0) translate(-50%, -50%)`;
 
     requestAnimationFrame(animateCursor);
   };
@@ -125,11 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const loaderBar = document.getElementById('loaderBar');
   const loaderText = document.getElementById('loaderText');
   
-  // We'll load the first 12 photos + 2 videos completely, and let the rest load lazily.
-  const criticalAssets = [
-    ...PHOTOS.slice(0, 12).map(p => p.src),
-    ...VIDEOS.slice(0, 2).map(v => v.src)
-  ];
+  // We'll load the first 6 photos completely, and let the rest load lazily. No videos preloaded.
+  const criticalAssets = PHOTOS.slice(0, 6).map(p => p.src);
   
   let loadedCount = 0;
   const totalCritical = criticalAssets.length;
@@ -155,33 +168,23 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     document.body.style.overflow = 'hidden';
     criticalAssets.forEach(src => {
-      if (src.endsWith('.mp4')) {
-        const video = document.createElement('video');
-        video.src = src;
-        video.preload = 'auto';
-        video.onloadeddata = updateLoaderProgress;
-        video.onerror = updateLoaderProgress; // fail gracefully
-      } else {
-        const img = new Image();
-        img.src = src;
-        img.onload = updateLoaderProgress;
-        img.onerror = updateLoaderProgress;
-      }
+      const img = new Image();
+      img.src = src;
+      img.onload = updateLoaderProgress;
+      img.onerror = updateLoaderProgress;
     });
   }
 
   // ==========================================
-  // SCROLLSPY & STICKY NAV
+  // SCROLLSPY & STICKY NAV (OPTIMIZED)
   // ==========================================
   const nav = document.getElementById('nav');
   const navLinks = document.querySelectorAll('.nav-link');
   const sections = document.querySelectorAll('section');
 
-  window.addEventListener('scroll', () => {
-    let current = '';
+  let ticking = false;
+  const updateNav = () => {
     const scrollPos = window.scrollY;
-
-    // Sticky nav layout changes
     if (scrollPos > 100) {
       nav.style.padding = '0.8rem 4%';
       nav.style.backgroundColor = 'rgba(5, 5, 9, 0.95)';
@@ -189,22 +192,37 @@ document.addEventListener('DOMContentLoaded', () => {
       nav.style.padding = '1.5rem 4%';
       nav.style.backgroundColor = 'rgba(5, 5, 9, 0.7)';
     }
+    ticking = false;
+  };
 
-    sections.forEach(section => {
-      const sectionTop = section.offsetTop - 150;
-      const sectionHeight = section.clientHeight;
-      if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
-        current = section.getAttribute('id');
-      }
-    });
-
-    navLinks.forEach(link => {
-      link.classList.remove('active');
-      if (link.getAttribute('data-section') === current) {
-        link.classList.add('active');
-      }
-    });
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(updateNav);
+      ticking = true;
+    }
   });
+
+  const observerOptions = {
+    root: null,
+    rootMargin: '-20% 0px -60% 0px',
+    threshold: 0
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('data-section') === id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, observerOptions);
+
+  sections.forEach(section => observer.observe(section));
 
   // ==========================================
   // INJECT DYNAMIC PHOTO GALLERY MASONRY
@@ -225,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.innerHTML = `
         <img src="${photo.src}" alt="${photo.title}" loading="lazy" />
         <div class="gallery-card-overlay">
-          <span class="gallery-card-tag">${photo.category} · ${photo.year}</span>
+          <span class="gallery-card-tag">${photo.category} · ${getClickDate(photo.src)}</span>
           <h4 class="gallery-card-title">${photo.title}</h4>
         </div>
       `;
@@ -279,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="video-container">
           <video src="${video.src}" loop playsinline muted preload="metadata"></video>
           <div class="video-overlay">
-            <span class="video-badge">${video.year}</span>
+            <span class="video-badge">${getClickDate(video.src)}</span>
             <button class="video-btn">
               <svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             </button>
@@ -372,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
       item.innerHTML = `
         <img src="${photo.src}" alt="${photo.title}" loading="lazy" />
         <div class="mosaic-overlay">
-          <span class="mosaic-tag">${photo.category}</span>
+          <span class="mosaic-tag">${photo.category} · ${getClickDate(photo.src)}</span>
           <h4 class="mosaic-title">${photo.title}</h4>
         </div>
       `;
@@ -393,6 +411,15 @@ document.addEventListener('DOMContentLoaded', () => {
   let isDown = false;
   let startX;
   let scrollLeft;
+  let maxScroll = mosaicWrap.scrollWidth - mosaicWrap.clientWidth;
+
+  window.addEventListener('resize', () => {
+    maxScroll = mosaicWrap.scrollWidth - mosaicWrap.clientWidth;
+  });
+
+  setTimeout(() => {
+    maxScroll = mosaicWrap.scrollWidth - mosaicWrap.clientWidth;
+  }, 1000);
 
   mosaicWrap.addEventListener('mousedown', (e) => {
     isDown = true;
@@ -430,7 +457,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const updateMosaicProgress = () => {
-    const maxScroll = mosaicWrap.scrollWidth - mosaicWrap.clientWidth;
     const progress = maxScroll > 0 ? (mosaicWrap.scrollLeft / maxScroll) * 100 : 0;
     mosaicProgress.style.width = `${progress}%`;
   };
@@ -470,6 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.innerHTML = `
         <img src="${photo.src}" alt="${photo.title}" />
         <div class="carousel-card-info">
+          <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-accent-3); display: block; margin-bottom: 0.2rem;">${getClickDate(photo.src)}</span>
           <h4 class="carousel-card-title">${photo.title}</h4>
         </div>
       `;
@@ -543,6 +570,11 @@ document.addEventListener('DOMContentLoaded', () => {
       lightboxImg.alt = photo.title;
       lightboxCounter.innerText = `${currentPhotoIndex + 1} / ${PHOTOS.length}`;
       
+      const titleElem = document.getElementById('lightboxTitle');
+      const metaElem = document.getElementById('lightboxMeta');
+      if (titleElem) titleElem.innerText = photo.title;
+      if (metaElem) metaElem.innerText = `${photo.category.toUpperCase()} · ${getClickDate(photo.src)}`;
+      
       lightboxImg.onload = () => {
         lightboxImg.style.transform = 'scale(1)';
         lightboxImg.style.opacity = '1';
@@ -580,10 +612,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const tiltElements = document.querySelectorAll('[data-tilt]');
     
     tiltElements.forEach(element => {
+      let rect = null;
+      
+      element.addEventListener('mouseenter', () => {
+        rect = element.getBoundingClientRect();
+      });
+      
       element.addEventListener('mousemove', (e) => {
-        const rect = element.getBoundingClientRect();
-        const x = e.clientX - rect.left; // x position within the element
-        const y = e.clientY - rect.top;  // y position within the element
+        if (!rect) rect = element.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
         
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
@@ -595,6 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       element.addEventListener('mouseleave', () => {
+        rect = null;
         element.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
       });
     });
