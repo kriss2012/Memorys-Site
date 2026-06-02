@@ -273,8 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       masonry.appendChild(card);
     });
-    
-    addCursorHoverTriggers();
   };
 
   generateGallery('all');
@@ -387,7 +385,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       mosaicTrack.appendChild(item);
     });
-    addCursorHoverTriggers();
   };
 
   generateMosaic();
