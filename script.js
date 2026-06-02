@@ -302,30 +302,58 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   const captureVideoThumbnail = (src) => new Promise((resolve) => {
     const vid = document.createElement('video');
-    vid.preload = 'metadata';
     vid.muted = true;
     vid.playsInline = true;
-    vid.crossOrigin = 'anonymous';
+    vid.preload = 'auto';
+    // Do NOT set crossOrigin — same-origin videos don't need it and it causes issues
     let done = false;
-    const finish = () => { if (!done) { done = true; vid.src = ''; resolve(null); } };
-    vid.addEventListener('loadedmetadata', () => {
-      vid.currentTime = Math.min(1.5, vid.duration * 0.08);
-    });
-    vid.addEventListener('seeked', () => {
+
+    const finish = (result = null) => {
       if (done) return;
       done = true;
+      vid.pause();
+      vid.removeAttribute('src');
+      vid.load();
+      resolve(result);
+    };
+
+    const tryCapture = () => {
+      if (done) return;
       try {
         const canvas = document.createElement('canvas');
-        canvas.width = vid.videoWidth || 1280;
-        canvas.height = vid.videoHeight || 720;
-        canvas.getContext('2d').drawImage(vid, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.95));
-      } catch (e) { resolve(null); }
-      vid.src = '';
+        canvas.width = vid.videoWidth || 640;
+        canvas.height = vid.videoHeight || 360;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+        // Check if frame is blank (all black)
+        const px = ctx.getImageData(canvas.width / 2, canvas.height / 2, 1, 1).data;
+        if (px[0] === 0 && px[1] === 0 && px[2] === 0) {
+          // Frame is black, try seeking further
+          vid.currentTime = Math.min(vid.currentTime + 1, vid.duration - 0.5);
+          return;
+        }
+        finish(canvas.toDataURL('image/jpeg', 0.88));
+      } catch (e) {
+        finish(null);
+      }
+    };
+
+    vid.addEventListener('seeked', tryCapture);
+
+    vid.addEventListener('loadeddata', () => {
+      // Seek to 10% or 2s into video, whichever is smaller
+      const seekTo = Math.min(2, (vid.duration || 10) * 0.1);
+      vid.currentTime = seekTo;
     });
-    vid.addEventListener('error', finish);
-    setTimeout(finish, 8000);
+
+    vid.addEventListener('error', () => finish(null));
+
+    // Generous timeout for large files
+    const timer = setTimeout(() => finish(null), 15000);
+    vid.addEventListener('seeked', () => clearTimeout(timer), { once: false });
+
     vid.src = src;
+    vid.load();
   });
 
   // ==========================================
