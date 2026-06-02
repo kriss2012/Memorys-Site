@@ -36,14 +36,29 @@
     <div class="nav-logo">
       <span class="nav-logo-text">BCA<span class="nav-logo-accent"> Memories</span></span>
     </div>
-    <div class="nav-links">
+    <div class="nav-links" id="navLinks">
       <a href="#intro" class="nav-link" data-section="intro">Home</a>
       <a href="#gallery" class="nav-link" data-section="gallery">Gallery</a>
       <a href="#videos" class="nav-link" data-section="videos">Videos</a>
       <a href="#mosaic" class="nav-link" data-section="mosaic">Moments</a>
     </div>
-    <div class="nav-batch">2023–2026</div>
+    <div class="nav-right">
+      <div class="nav-batch">2023–2026</div>
+      <button class="nav-hamburger" id="navHamburger" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </nav>
+  <!-- Mobile Menu Overlay -->
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-inner">
+      <a href="#intro" class="mobile-nav-link" data-section="intro">Home</a>
+      <a href="#gallery" class="mobile-nav-link" data-section="gallery">Gallery</a>
+      <a href="#videos" class="mobile-nav-link" data-section="videos">Videos</a>
+      <a href="#mosaic" class="mobile-nav-link" data-section="mosaic">Moments</a>
+      <div class="mobile-batch-badge">BCA · 2023–2026</div>
+    </div>
+  </div>
 
   <!-- ===================== HERO / INTRO SECTION ===================== -->
   <section class="hero" id="intro">
