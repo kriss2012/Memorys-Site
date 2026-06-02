@@ -90,47 +90,42 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ==========================================
-  // CUSTOM CURSOR LERP ANIMATION
+  // CUSTOM CURSOR LERP ANIMATION (desktop only)
   // ==========================================
   const cursor = document.getElementById('cursor');
   const follower = document.getElementById('cursorFollower');
-  
-  let mouseX = 0, mouseY = 0;
-  let cursorX = 0, cursorY = 0;
-  let followerX = 0, followerY = 0;
-  
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
   const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
 
-  window.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-  });
+  if (!isTouchDevice) {
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+    let followerX = 0, followerY = 0;
 
-  const animateCursor = () => {
-    cursorX = lerp(cursorX, mouseX, 0.2);
-    cursorY = lerp(cursorY, mouseY, 0.2);
-    cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%)`;
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    }, { passive: true });
 
-    followerX = lerp(followerX, mouseX, 0.1);
-    followerY = lerp(followerY, mouseY, 0.1);
-    follower.style.transform = `translate3d(${followerX}px, ${followerY}px, 0) translate(-50%, -50%)`;
+    const animateCursor = () => {
+      cursorX = lerp(cursorX, mouseX, 0.2);
+      cursorY = lerp(cursorY, mouseY, 0.2);
+      cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%)`;
+      followerX = lerp(followerX, mouseX, 0.1);
+      followerY = lerp(followerY, mouseY, 0.1);
+      follower.style.transform = `translate3d(${followerX}px, ${followerY}px, 0) translate(-50%, -50%)`;
+      requestAnimationFrame(animateCursor);
+    };
+    animateCursor();
+  }
 
-    requestAnimationFrame(animateCursor);
-  };
-  animateCursor();
-
-  // Hover effect triggers
+  // Cursor hover triggers — called ONCE after all DOM is ready
   const addCursorHoverTriggers = () => {
-    const hoverables = document.querySelectorAll('a, button, .preview-card, .showcase-item, .gallery-card, .video-card, .mosaic-item, .carousel-card, .filter-btn');
-    hoverables.forEach(item => {
-      item.addEventListener('mouseenter', () => {
-        cursor.classList.add('hovered');
-        follower.classList.add('hovered');
-      });
-      item.addEventListener('mouseleave', () => {
-        cursor.classList.remove('hovered');
-        follower.classList.remove('hovered');
-      });
+    if (isTouchDevice) return; // skip entirely on mobile
+    document.querySelectorAll('a, button, .preview-card, .showcase-item, .gallery-card, .video-card, .mosaic-item, .carousel-card, .filter-btn').forEach(item => {
+      item.addEventListener('mouseenter', () => { cursor.classList.add('hovered'); follower.classList.add('hovered'); });
+      item.addEventListener('mouseleave', () => { cursor.classList.remove('hovered'); follower.classList.remove('hovered'); });
     });
   };
   
@@ -305,106 +300,58 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // INJECT VIDEO MEMORIES GRID (LAZY LOADED)
+  // INJECT VIDEO MEMORIES GRID
+  // Videos are NEVER auto-loaded. Tap play to load+play.
   // ==========================================
   const videosGrid = document.getElementById('videosGrid');
-  const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry/i.test(navigator.userAgent);
 
   const generateVideos = () => {
     videosGrid.innerHTML = '';
-    
-    VIDEOS.forEach((video, index) => {
+
+    VIDEOS.forEach((video) => {
       const card = document.createElement('div');
       card.className = 'video-card';
-      
-      // On mobile: no autoplay on hover — use poster thumbnail + click to fullscreen
-      // On desktop: hover to play (but load src lazily via IntersectionObserver)
+
       card.innerHTML = `
         <div class="video-container">
-          <video loop playsinline muted preload="none" data-src="${video.src}"></video>
-          <div class="video-overlay">
-            <span class="video-badge">${getClickDate(video.src)}</span>
-            <button class="video-btn" aria-label="Play video">
-              <svg width="22" height="22" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            </button>
-            <div class="video-meta">
+          <div class="video-placeholder">
+            <div class="vp-gradient"></div>
+            <div class="vp-info">
+              <span class="video-badge">${getClickDate(video.src)}</span>
               <span class="video-card-title">${video.title}</span>
-              <button class="video-mute-btn" title="Mute/Unmute">
-                <svg class="mute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                </svg>
-              </button>
             </div>
+            <button class="video-btn video-tap-play" aria-label="Play video">
+              <svg width="28" height="28" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="white"/></svg>
+            </button>
           </div>
+          <video loop playsinline preload="none" data-src="${video.src}" style="display:none;"></video>
         </div>
       `;
-      
+
       const vElement = card.querySelector('video');
-      const overlay = card.querySelector('.video-overlay');
-      const playBtn = card.querySelector('.video-btn');
-      const muteBtn = card.querySelector('.video-mute-btn');
+      const placeholder = card.querySelector('.video-placeholder');
+      const tapBtn = card.querySelector('.video-tap-play');
       let srcLoaded = false;
 
-      // Load video src only when card enters viewport
-      const videoObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && !srcLoaded) {
-            srcLoaded = true;
-            vElement.src = vElement.dataset.src;
-            vElement.load();
-            videoObserver.unobserve(card);
-          }
-        });
-      }, { rootMargin: '200px', threshold: 0 });
-
-      videoObserver.observe(card);
-      
-      if (!isMobile) {
-        // Desktop: hover to play muted preview
-        card.addEventListener('mouseenter', () => {
-          if (srcLoaded) {
-            vElement.play().catch(err => console.log('Autoplay prevented:', err));
-          }
-          playBtn.style.opacity = '0';
-          playBtn.style.transform = 'scale(0.8)';
-        });
-        
-        card.addEventListener('mouseleave', () => {
-          vElement.pause();
-          playBtn.style.opacity = '1';
-          playBtn.style.transform = 'scale(1)';
-        });
-      }
-
-      // Mute toggle
-      muteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        vElement.muted = !vElement.muted;
-        muteBtn.innerHTML = vElement.muted
-          ? `<svg class="mute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>`
-          : `<svg class="mute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
-      });
-
-      // Click overlay to fullscreen
-      overlay.addEventListener('click', (e) => {
-        if (e.target.closest('.video-mute-btn')) return;
+      const loadAndPlay = () => {
         if (!srcLoaded) {
           srcLoaded = true;
           vElement.src = vElement.dataset.src;
           vElement.load();
         }
+        placeholder.style.display = 'none';
+        vElement.style.display = 'block';
         vElement.muted = false;
-        vElement.play();
-        if (vElement.requestFullscreen) {
-          vElement.requestFullscreen();
-        } else if (vElement.webkitRequestFullscreen) {
-          vElement.webkitRequestFullscreen();
-        }
-      });
-      
+        vElement.play().catch(() => { vElement.muted = true; vElement.play(); });
+        if (vElement.requestFullscreen) vElement.requestFullscreen();
+        else if (vElement.webkitRequestFullscreen) vElement.webkitRequestFullscreen();
+      };
+
+      tapBtn.addEventListener('click', loadAndPlay);
+      placeholder.addEventListener('click', loadAndPlay);
+
       videosGrid.appendChild(card);
     });
-    addCursorHoverTriggers();
   };
 
   generateVideos();
@@ -580,10 +527,12 @@ document.addEventListener('DOMContentLoaded', () => {
     rotateCarousel();
   });
 
-  // Handle window resizing to adjust radius
+  // Debounced resize for carousel
+  let resizeTimer;
   window.addEventListener('resize', () => {
-    initCarousel();
-  });
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => initCarousel(), 300);
+  }, { passive: true });
 
   // ==========================================
   // LIGHTBOX SYSTEM
@@ -691,8 +640,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
   
-  applyTiltEffect();
-  
-  // Initial hover triggers on start
+  if (!isTouchDevice) applyTiltEffect();
+
+  // Single call for cursor hover triggers after all DOM is built
   addCursorHoverTriggers();
 });
