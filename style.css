@@ -192,14 +192,23 @@ img, video {
 }
 
 @keyframes orbFloat {
-  0% {
-    transform: translate(0, 0) scale(1);
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, -50px) scale(1.1); }
+  100% { transform: translate(-30px, 30px) scale(0.9); }
+}
+
+/* Kill expensive blur + animation on mobile */
+@media (max-width: 768px) {
+  .hero-orb {
+    animation: none !important;
+    opacity: 0.15;
+    filter: blur(80px);
   }
-  50% {
-    transform: translate(50px, -50px) scale(1.1);
+  .noise {
+    display: none;
   }
-  100% {
-    transform: translate(-30px, 30px) scale(0.9);
+  .hero-bg-grid {
+    display: none;
   }
 }
 
@@ -1333,6 +1342,65 @@ img, video {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ==========================================
+   VIDEO PLACEHOLDER (Tap-to-Play)
+   ========================================== */
+.video-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #1a0530 0%, #0a0a14 50%, #1a0020 100%);
+  cursor: pointer;
+  z-index: 2;
+  padding: 1.5rem;
+}
+
+.vp-gradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(138,43,226,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.vp-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.vp-info .video-card-title {
+  font-size: 1.1rem;
+}
+
+.video-placeholder .video-btn {
+  position: relative;
+  z-index: 1;
+  width: 70px;
+  height: 70px;
+  background: rgba(138,43,226,0.3);
+  border: 2px solid rgba(138,43,226,0.6);
+  box-shadow: 0 0 30px rgba(138,43,226,0.4);
+  transition: transform 0.2s ease, background 0.2s ease;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.video-placeholder .video-btn:hover,
+.video-placeholder .video-btn:active {
+  background: rgba(138,43,226,0.6);
+  transform: scale(1.1) !important;
+}
+
+.video-placeholder .vp-info .video-badge {
+  align-self: flex-start;
 }
 
 /* ==========================================
