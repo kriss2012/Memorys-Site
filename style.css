@@ -90,10 +90,13 @@ img, video {
   background-color: var(--color-accent-3);
   border-radius: 50%;
   position: fixed;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  transform: translate3d(0, 0, 0) translate(-50%, -50%);
   pointer-events: none;
   z-index: 10000;
   transition: width 0.2s, height 0.2s, background-color 0.2s;
+  will-change: transform;
 }
 
 .cursor-follower {
@@ -102,10 +105,13 @@ img, video {
   border: 1px solid rgba(0, 245, 212, 0.3);
   border-radius: 50%;
   position: fixed;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  transform: translate3d(0, 0, 0) translate(-50%, -50%);
   pointer-events: none;
   z-index: 9999;
-  transition: transform 0.08s ease-out, width 0.3s, height 0.3s, border-color 0.3s, background-color 0.3s;
+  transition: width 0.3s, height 0.3s, border-color 0.3s, background-color 0.3s;
+  will-change: transform;
 }
 
 .cursor.hovered {
@@ -1357,6 +1363,36 @@ img, video {
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.lightbox-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 2rem;
+  background: linear-gradient(transparent, rgba(5, 5, 9, 0.95));
+  z-index: 5;
+  text-align: left;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.lightbox-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.3rem;
+  font-family: var(--font-sans);
+}
+
+.lightbox-meta {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-accent-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
 }
 
 .lightbox-img-wrap img {
