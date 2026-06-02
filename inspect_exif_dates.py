@@ -1,30 +1,22 @@
 import os
 from PIL import Image
-from PIL.ExifTags import TAGS
 
 public_dir = "d:\\Memorys-Site\\public"
 files = sorted(os.listdir(public_dir))
 
-print(f"{'Filename':<40} | {'EXIF Date':<20} | {'File Modification Date':<20}")
-print("-" * 90)
-
-for f in files:
+for f in files[:5]: # just check first 5
     if f.lower().endswith(('.jpg', '.jpeg', '.png')):
         path = os.path.join(public_dir, f)
         try:
             with Image.open(path) as img:
-                exif = img._getexif()
-                exif_date = None
+                print(f"File: {f}")
+                print(f"  info keys: {list(img.info.keys())}")
+                if 'exif' in img.info:
+                    print("  Has raw exif")
+                exif = img.getexif()
                 if exif:
-                    for tag_id, value in exif.items():
-                        tag_name = TAGS.get(tag_id, tag_id)
-                        if tag_name in ('DateTimeOriginal', 'DateTimeDigitized', 'DateTime'):
-                            exif_date = value
-                            break
-                
-                mtime = os.path.getmtime(path)
-                import datetime
-                mtime_str = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
-                print(f"{f:<40} | {str(exif_date):<20} | {mtime_str:<20}")
+                    print(f"  getexif keys: {list(exif.keys())}")
+                else:
+                    print("  No getexif")
         except Exception as e:
-            print(f"{f:<40} | Error: {e}")
+            print(f"  Error: {e}")
