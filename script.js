@@ -298,58 +298,264 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // INJECT VIDEO MEMORIES GRID
-  // Videos are NEVER auto-loaded. Tap play to load+play.
+  // VIDEO THUMBNAIL CAPTURE (Canvas from video frame)
+  // ==========================================
+  const captureVideoThumbnail = (src) => new Promise((resolve) => {
+    const vid = document.createElement('video');
+    vid.preload = 'metadata';
+    vid.muted = true;
+    vid.playsInline = true;
+    vid.crossOrigin = 'anonymous';
+    let done = false;
+    const finish = () => { if (!done) { done = true; vid.src = ''; resolve(null); } };
+    vid.addEventListener('loadedmetadata', () => {
+      vid.currentTime = Math.min(1.5, vid.duration * 0.08);
+    });
+    vid.addEventListener('seeked', () => {
+      if (done) return;
+      done = true;
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = vid.videoWidth || 1280;
+        canvas.height = vid.videoHeight || 720;
+        canvas.getContext('2d').drawImage(vid, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.95));
+      } catch (e) { resolve(null); }
+      vid.src = '';
+    });
+    vid.addEventListener('error', finish);
+    setTimeout(finish, 8000);
+    vid.src = src;
+  });
+
+  // ==========================================
+  // CUSTOM VIDEO MODAL PLAYER
+  // ==========================================
+  const fmtTime = (s) => {
+    if (!isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  };
+
+  let vmVideo = null;
+
+  const closeVideoModal = () => {
+    const modal = document.getElementById('videoModal');
+    if (!modal) return;
+    if (vmVideo) { vmVideo.pause(); vmVideo.src = ''; vmVideo.load(); vmVideo = null; }
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (document.webkitFullscreenElement) document.webkitExitFullscreen && document.webkitExitFullscreen();
+    modal.classList.remove('vm-open');
+    setTimeout(() => { modal.remove(); document.body.style.overflow = 'visible'; }, 380);
+  };
+
+  const openVideoModal = (src, title, date) => {
+    closeVideoModal();
+    const modal = document.createElement('div');
+    modal.className = 'video-modal';
+    modal.id = 'videoModal';
+    modal.innerHTML = `
+      <div class="vm-backdrop"></div>
+      <div class="vm-container">
+        <div class="vm-header">
+          <div class="vm-title-wrap">
+            <span class="vm-date">${date}</span>
+            <h3 class="vm-title">${title}</h3>
+          </div>
+          <button class="vm-close-btn" id="vmClose" aria-label="Close video">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="vm-video-wrap">
+          <video id="vmVid" playsinline preload="auto" src="${src}"></video>
+          <div class="vm-center-play" id="vmCenterPlay">
+            <svg width="40" height="40" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="white"/></svg>
+          </div>
+        </div>
+        <div class="vm-controls">
+          <div class="vm-progress-wrap" id="vmProgressWrap">
+            <div class="vm-progress-bg">
+              <div class="vm-progress-fill" id="vmFill"></div>
+            </div>
+            <div class="vm-progress-thumb" id="vmThumb"></div>
+          </div>
+          <div class="vm-ctrl-row">
+            <div class="vm-ctrls-left">
+              <button class="vm-ctrl-btn" id="vmPlayPause" aria-label="Play/Pause">
+                <svg class="ic-pause" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                <svg class="ic-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+              <button class="vm-ctrl-btn" id="vmMute" aria-label="Mute">
+                <svg class="ic-unmuted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                <svg class="ic-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
+              </button>
+              <span class="vm-time" id="vmTime">0:00 / 0:00</span>
+            </div>
+            <div class="vm-ctrls-right">
+              <button class="vm-ctrl-btn" id="vmFS" aria-label="Fullscreen">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => modal.classList.add('vm-open'));
+
+    vmVideo = modal.querySelector('#vmVid');
+    const fill = modal.querySelector('#vmFill');
+    const thumb = modal.querySelector('#vmThumb');
+    const timeEl = modal.querySelector('#vmTime');
+    const playPauseBtn = modal.querySelector('#vmPlayPause');
+    const muteBtn = modal.querySelector('#vmMute');
+    const fsBtn = modal.querySelector('#vmFS');
+    const centerPlay = modal.querySelector('#vmCenterPlay');
+    const progressWrap = modal.querySelector('#vmProgressWrap');
+
+    const updatePlayIcon = () => {
+      const paused = vmVideo.paused;
+      playPauseBtn.querySelector('.ic-pause').style.display = paused ? 'none' : 'block';
+      playPauseBtn.querySelector('.ic-play').style.display = paused ? 'block' : 'none';
+      centerPlay.style.opacity = paused ? '1' : '0';
+    };
+
+    const updateMuteIcon = () => {
+      muteBtn.querySelector('.ic-unmuted').style.display = vmVideo.muted ? 'none' : 'block';
+      muteBtn.querySelector('.ic-muted').style.display = vmVideo.muted ? 'block' : 'none';
+    };
+
+    vmVideo.addEventListener('timeupdate', () => {
+      if (!vmVideo.duration) return;
+      const pct = (vmVideo.currentTime / vmVideo.duration) * 100;
+      fill.style.width = pct + '%';
+      thumb.style.left = pct + '%';
+      timeEl.textContent = `${fmtTime(vmVideo.currentTime)} / ${fmtTime(vmVideo.duration)}`;
+    });
+
+    vmVideo.addEventListener('play', updatePlayIcon);
+    vmVideo.addEventListener('pause', updatePlayIcon);
+    vmVideo.addEventListener('volumechange', updateMuteIcon);
+
+    vmVideo.addEventListener('canplay', () => {
+      vmVideo.play().catch(() => {});
+      timeEl.textContent = `0:00 / ${fmtTime(vmVideo.duration)}`;
+    });
+
+    playPauseBtn.addEventListener('click', () => {
+      if (vmVideo.paused) vmVideo.play(); else vmVideo.pause();
+    });
+
+    modal.querySelector('#vmVid').addEventListener('click', () => {
+      if (vmVideo.paused) vmVideo.play(); else vmVideo.pause();
+    });
+
+    muteBtn.addEventListener('click', () => { vmVideo.muted = !vmVideo.muted; });
+
+    fsBtn.addEventListener('click', () => {
+      const wrap = modal.querySelector('.vm-video-wrap');
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (wrap.requestFullscreen) wrap.requestFullscreen();
+        else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+    });
+
+    // Seek on progress click/drag
+    const seek = (e) => {
+      const rect = progressWrap.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      vmVideo.currentTime = pct * vmVideo.duration;
+    };
+    let seeking = false;
+    progressWrap.addEventListener('mousedown', (e) => { seeking = true; seek(e); });
+    progressWrap.addEventListener('touchstart', (e) => { seeking = true; seek(e.touches[0]); }, { passive: true });
+    window.addEventListener('mousemove', (e) => { if (seeking) seek(e); });
+    window.addEventListener('touchmove', (e) => { if (seeking) seek(e.touches[0]); }, { passive: true });
+    window.addEventListener('mouseup', () => { seeking = false; });
+    window.addEventListener('touchend', () => { seeking = false; });
+
+    // Close button + backdrop click
+    modal.querySelector('#vmClose').addEventListener('click', closeVideoModal);
+    modal.querySelector('.vm-backdrop').addEventListener('click', closeVideoModal);
+
+    // ESC key
+    const onKey = (e) => { if (e.key === 'Escape') { closeVideoModal(); document.removeEventListener('keydown', onKey); } };
+    document.addEventListener('keydown', onKey);
+
+    // Fullscreen exit → pause video
+    const onFsChange = () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (vmVideo && !vmVideo.paused) vmVideo.pause();
+      }
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+  };
+
+  // ==========================================
+  // INJECT VIDEO GRID — thumbnails from canvas
   // ==========================================
   const videosGrid = document.getElementById('videosGrid');
 
-  const generateVideos = () => {
+  const generateVideos = async () => {
     videosGrid.innerHTML = '';
 
-    VIDEOS.forEach((video) => {
+    for (const video of VIDEOS) {
       const card = document.createElement('div');
       card.className = 'video-card';
+      const date = getClickDate(video.src);
 
       card.innerHTML = `
         <div class="video-container">
           <div class="video-placeholder">
-            <div class="vp-gradient"></div>
+            <div class="vp-thumb-wrap">
+              <div class="vp-thumb-loading">
+                <div class="vp-spinner"></div>
+              </div>
+              <img class="vp-thumb" alt="${video.title}" style="display:none;" />
+            </div>
+            <div class="vp-overlay-gradient"></div>
             <div class="vp-info">
-              <span class="video-badge">${getClickDate(video.src)}</span>
+              <span class="video-badge">${date}</span>
               <span class="video-card-title">${video.title}</span>
             </div>
-            <button class="video-btn video-tap-play" aria-label="Play video">
-              <svg width="28" height="28" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="white"/></svg>
+            <button class="video-btn video-tap-play" aria-label="Play ${video.title}">
+              <svg width="30" height="30" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="white"/></svg>
             </button>
           </div>
-          <video loop playsinline preload="none" data-src="${video.src}" style="display:none;"></video>
         </div>
       `;
 
-      const vElement = card.querySelector('video');
-      const placeholder = card.querySelector('.video-placeholder');
+      const thumb = card.querySelector('.vp-thumb');
+      const thumbLoading = card.querySelector('.vp-thumb-loading');
       const tapBtn = card.querySelector('.video-tap-play');
-      let srcLoaded = false;
+      const placeholder = card.querySelector('.video-placeholder');
 
-      const loadAndPlay = () => {
-        if (!srcLoaded) {
-          srcLoaded = true;
-          vElement.src = vElement.dataset.src;
-          vElement.load();
-        }
-        placeholder.style.display = 'none';
-        vElement.style.display = 'block';
-        vElement.muted = false;
-        vElement.play().catch(() => { vElement.muted = true; vElement.play(); });
-        if (vElement.requestFullscreen) vElement.requestFullscreen();
-        else if (vElement.webkitRequestFullscreen) vElement.webkitRequestFullscreen();
-      };
-
-      tapBtn.addEventListener('click', loadAndPlay);
-      placeholder.addEventListener('click', loadAndPlay);
+      // Tap to open modal
+      const play = () => openVideoModal(video.src, video.title, date);
+      tapBtn.addEventListener('click', (e) => { e.stopPropagation(); play(); });
+      placeholder.addEventListener('click', play);
 
       videosGrid.appendChild(card);
-    });
+
+      // Capture thumbnail asynchronously (non-blocking)
+      captureVideoThumbnail(video.src).then((dataURL) => {
+        thumbLoading.style.display = 'none';
+        if (dataURL) {
+          thumb.src = dataURL;
+          thumb.style.display = 'block';
+        } else {
+          // fallback gradient stays
+          thumbLoading.innerHTML = '<div class="vp-thumb-icon">🎬</div>';
+          thumbLoading.style.display = 'flex';
+        }
+      });
+    }
   };
 
   generateVideos();
